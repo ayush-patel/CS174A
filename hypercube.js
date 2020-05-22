@@ -342,7 +342,8 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             // Initial shape definitions.
             let shapes = {
                 'cube': new Cube_Wireframe(),
-                'hypercube': new Hypercube_Wireframe()
+                'hypercube': new Hypercube_Wireframe(),
+                'sphere': new Subdivision_Sphere(4)
             };
             for (let i = 0, vertexCount = shapes['cube'].vertices.length; i < vertexCount; i++) {
                 shapes['cs' + i] = new Subdivision_Sphere(2); // 3c cube vertices
@@ -375,7 +376,8 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 cb: Color.of(0, 1, 0, 1), // green back
                 cc: Color.of(1, 1, 1, 1)  // white connectors
             };
-
+            this.white_ball = context.get_instance(Phong_Shader).material(Color.of(1, 1, 1, 1), {ambient: 1}, {smoothness: 1}); // defining material for ball of light
+            
             // Define state variables and misc settings.
             this.colorCoding = true;
             this.frozen = false;
@@ -412,11 +414,13 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
         display(graphics_state) {
             // Set up scene contents.
             graphics_state.lights = this.lights;
+            const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
             let c = this.shapes.cube;
             let hc = this.shapes.hypercube;
             let cylinderVec = Vec.of(0, 0, 1); // initial alignment of directional cylinder (anchored at one end)
-            let cubeAnchor = Vec.of(-2, 0, 0); // center pos of dynamic cube
-            let hypercubeAnchor = Vec.of(2, 0, 0); // center pos of dynamic hypercube
+            let cubeAnchor = Vec.of(-4, 0, 0); // center pos of dynamic cube
+            let hypercubeAnchor = Vec.of(4, 0, 0); // center pos of dynamic hypercube
+            let light_src = this.shapes.sphere;    // ball of light
 
             // Perform dynamic transforms (edit shape defs).
             if (!this.frozen) {
@@ -434,7 +438,13 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             }
 
             // Perform static transforms (manipulate shapes).
-            let model_transform;
+            let model_transform = Mat4.identity();
+
+            model_transform = model_transform.times(Mat4.translation([0, 0, 0]));
+
+            light_src.draw(graphics_state, model_transform, this.white_ball);
+            this.lights = [new Light(Vec.of(0, 0, 0, 1), Color.of(1, 1, 1, 1), 100)];
+
             // Do we render flat wireframes...?
             if (this.wireframe) {
                 model_transform = Mat4.identity().times(Mat4.translation(cubeAnchor));
