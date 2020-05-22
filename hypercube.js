@@ -376,8 +376,14 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 cb: Color.of(0, 1, 0, 1), // green back
                 cc: Color.of(1, 1, 1, 1)  // white connectors
             };
-            this.white_ball = context.get_instance(Phong_Shader).material(Color.of(1, 1, 1, 1), {ambient: 1}, {smoothness: 1}); // defining material for ball of light
-            
+
+            this.light_source = {
+                material: context.get_instance(Phong_Shader).material(Color.of(1, 1, 1, 1), {ambient: 1}, {smoothness: 1}), // defining material for ball of light
+                x_coord: 0,
+                y_coord: 0,
+                z_coord: 0
+            }
+
             // Define state variables and misc settings.
             this.colorCoding = true;
             this.frozen = false;
@@ -409,6 +415,24 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             this.key_triggered_button("Toggle 3D Wireframe", ["b"], () => {
                 this.wireframe = !this.wireframe;
             });
+
+            this.new_line();
+
+            this.key_triggered_button("Move Light Up", ["y"], () => {
+                this.light_source.y_coord += 1; 
+            });
+
+            this.key_triggered_button("Move Light Down", ["h"], () => {
+                this.light_source.y_coord -= 1; 
+            });
+
+            this.key_triggered_button("Move Light Left", ["g"], () => {
+                this.light_source.x_coord -= 1; 
+            });
+
+            this.key_triggered_button("Move Light Right", ["j"], () => {
+                this.light_source.x_coord += 1; 
+            });
         }
 
         display(graphics_state) {
@@ -420,7 +444,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             let cylinderVec = Vec.of(0, 0, 1); // initial alignment of directional cylinder (anchored at one end)
             let cubeAnchor = Vec.of(-4, 0, 0); // center pos of dynamic cube
             let hypercubeAnchor = Vec.of(4, 0, 0); // center pos of dynamic hypercube
-            let light_src = this.shapes.sphere;    // ball of light
+            let lightSourceAnchor = this.shapes.sphere;    // ball of light
 
             // Perform dynamic transforms (edit shape defs).
             if (!this.frozen) {
@@ -440,9 +464,9 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             // Perform static transforms (manipulate shapes).
             let model_transform = Mat4.identity();
 
-            model_transform = model_transform.times(Mat4.translation([0, 0, 0]));
-
-            light_src.draw(graphics_state, model_transform, this.white_ball);
+            // Creating a ball of light that will interact with our wireframe objects
+            model_transform = model_transform.times(Mat4.scale([0.75, 0.75, 0.75])).times(Mat4.translation([this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord]));
+            lightSourceAnchor.draw(graphics_state, model_transform, this.light_source.material);
             this.lights = [new Light(Vec.of(0, 0, 0, 1), Color.of(1, 1, 1, 1), 100)];
 
             // Do we render flat wireframes...?
