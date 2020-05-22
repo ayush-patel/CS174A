@@ -364,7 +364,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             this.ctx = context;
 
             // Define basic lights/materials/etc.
-            this.lights = [new Light(Vec.of(0, 5, 5, 1), Color.of(1, .4, 1, 1), 100000)];
+//             this.lights = [new Light(Vec.of(0, 5, 5, 1), Color.of(1, .4, 1, 1), 100000)];
             this.white = context.get_instance(Basic_Shader).material();
             this.clay = context.get_instance(Phong_Shader).material(Color.of(.9, .5, .9, 1), {
                 ambient: .4,
@@ -437,7 +437,6 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
 
         display(graphics_state) {
             // Set up scene contents.
-            graphics_state.lights = this.lights;
             const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
             let c = this.shapes.cube;
             let hc = this.shapes.hypercube;
@@ -467,7 +466,8 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             // Creating a ball of light that will interact with our wireframe objects
             model_transform = model_transform.times(Mat4.scale([0.75, 0.75, 0.75])).times(Mat4.translation([this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord]));
             lightSourceAnchor.draw(graphics_state, model_transform, this.light_source.material);
-            this.lights = [new Light(Vec.of(0, 0, 0, 1), Color.of(1, 1, 1, 1), 100)];
+            this.lights = [new Light(Vec.of(this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord, 1), Color.of(1, 1, 1, 1), 100)];
+            graphics_state.lights = this.lights;
 
             // Do we render flat wireframes...?
             if (this.wireframe) {
