@@ -479,7 +479,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             else {
                 lightSourceAnchor.draw(graphics_state, model_transform, this.light_source.bloom_material);
             }
-            this.lights = [new Light(Vec.of(this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord, 1), Color.of(1, 1, 1, 1), 100)];
+            this.lights = [new Light(Vec.of(this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord, 1), Color.of(1, 1, 1, 1), 100000)];
             graphics_state.lights = this.lights;
 
             // Do we render flat wireframes...?
