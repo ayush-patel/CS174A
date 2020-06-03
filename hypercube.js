@@ -379,6 +379,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
 
             this.light_source = {
                 material: context.get_instance(Phong_Shader).material(Color.of(1, 1, 1, 1), {ambient: 1}, {smoothness: 1}), // defining material for ball of light
+                bloom_material: context.get_instance(BloomEffect).material(Color.of(1, 1, 1, 1), {ambient: 1}, {smoothness: 1}), // ball of light with bloom effect
                 x_coord: 0,
                 y_coord: 0,
                 z_coord: 0
@@ -388,6 +389,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             this.colorCoding = true;
             this.frozen = false;
             this.wireframe = false;
+            this.bloomeffect = false;
         }
 
         make_control_panel() {
@@ -433,6 +435,12 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             this.key_triggered_button("Move Light Right", ["j"], () => {
                 this.light_source.x_coord += 1; 
             });
+
+            this.new_line();
+
+            this.key_triggered_button("Bloom Effect", ["l"], () => {
+                this.bloomeffect = !this.bloomeffect; 
+            });
         }
 
         display(graphics_state) {
@@ -465,7 +473,12 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
 
             // Creating a ball of light that will interact with our wireframe objects
             model_transform = model_transform.times(Mat4.scale([0.75, 0.75, 0.75])).times(Mat4.translation([this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord]));
-            lightSourceAnchor.draw(graphics_state, model_transform, this.light_source.material);
+            if (!this.bloomeffect) {
+                lightSourceAnchor.draw(graphics_state, model_transform, this.light_source.material);
+            }
+            else {
+                lightSourceAnchor.draw(graphics_state, model_transform, this.light_source.bloom_material);
+            }
             this.lights = [new Light(Vec.of(this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord, 1), Color.of(1, 1, 1, 1), 100)];
             graphics_state.lights = this.lights;
 
@@ -564,3 +577,55 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             }
         }
     };
+
+class BloomEffect extends Phong_Shader {
+    fragment_glsl_code() 
+    {
+        // adapted from 
+        // https://stackoverflow.com/questions/38986208/webgl-loop-index-cannot-be-compared-with-non-constant-expression
+        return `
+        precision mediump float;
+        precision mediump int;
+
+        uniform sampler2D u_image;
+        uniform float blur;       
+        uniform int u_horizontalpass; 
+        uniform float sigma;
+        uniform vec4 v_texCoord;    //should be varying, not uniform
+
+        const vec2 texOffset = vec2(1.0, 1.0);
+        
+        const float PI = 3.14159265;
+
+        void main() 
+        {
+            vec2 p = v_texCoord.st;
+            float numBlurPixelsPerSide = blur / 2.0;
+          
+            vec3 incrementalGaussian;
+            incrementalGaussian.x = 1.0 / (sqrt(2.0 * PI) * sigma);
+            incrementalGaussian.y = exp(-0.5 / (sigma * sigma));
+            incrementalGaussian.z = incrementalGaussian.y * incrementalGaussian.y;
+
+            vec4 avgValue = vec4(0.0, 0.0, 0.0, 0.0);
+            float coefficientSum = 0.0;
+
+            avgValue += texture2D(u_image, p) * incrementalGaussian.x;
+            coefficientSum += incrementalGaussian.x;
+            incrementalGaussian.xy *= incrementalGaussian.yz;
+
+            const float MAX_ITERATIONS = 100.0;
+
+            for (float i = 1.0; i <= MAX_ITERATIONS; i += 1.0) 
+            { 
+                if (i >= numBlurPixelsPerSide) { break; }
+                avgValue += texture2D(u_image, p - i * texOffset) * incrementalGaussian.x;         
+                avgValue += texture2D(u_image, p + i * texOffset) * incrementalGaussian.x;         
+                coefficientSum += 2.0 * incrementalGaussian.x;
+                incrementalGaussian.xy *= incrementalGaussian.yz;
+            }
+
+            gl_FragColor = avgValue / coefficientSum;
+        }`;
+    }
+};
