@@ -68,6 +68,35 @@ function ncube(dim) { // Programatically generate vertices and edges for n-dimen
         backEdges: backE
     }
 }
+function getRotBetween(from, to) { // Use quaternion to generate 4x4 matrix performing rotation between vectors.
+    // Formulas adapted from quaternion.js by Robert Eisele (C) 2016.
+
+    // For brevity...
+    let a = from[0], b = from[1], c = from[2];
+    let x = to[0],   y = to[1],   z = to[2];
+
+    // Construct normalized quaternion between vectors.
+    let qw,
+        qx = b*z - c*y,
+        qy = c*x - a*z,
+        qz = a*y - b*x;
+    let dot = a*x + b*y + c*z;
+    qw = dot + Math.sqrt(dot*dot + qx*qx + qy*qy + qz*qz);
+    let norm = Math.sqrt(qw*qw + qx*qx + qy*qy + qz*qz);
+    qw /= norm;
+    qx /= norm;
+    qy /= norm;
+    qz /= norm;
+
+    // Translate quaternion to 4x4 matrix.
+    let wx = 2*qw*qx, wy = 2*qw*qy, wz = 2*qw*qz;
+    let xx = 2*qx*qx, xy = 2*qx*qy, xz = 2*qx*qz;
+    let yy = 2*qy*qy, yz = 2*qy*qz, zz = 2*qz*qz;
+    return [ [1-(yy+zz),     xy-wz,     xz+wy, 0],
+             [    xy+wz, 1-(xx+zz),     yz-wx, 0],
+             [    xz-wy,     yz+wx, 1-(xx+yy), 0],
+             [        0,         0,         0, 1] ];
+}
 
 ///////////////////////////////////////////////////////////////////
 
@@ -341,7 +370,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 context.register_scene_component(new Movement_Controls(context, control_box.parentElement.insertCell()));
             // Set up graphics state.
             const r = context.width / context.height;
-            context.globals.graphics_state.camera_transform = Mat4.translation([0, -1.5, -10]).times(Mat4.rotation(45, Vec.of(1,0,0)));  // (camera uses inverted matrix)
+            context.globals.graphics_state.camera_transform = Mat4.translation([0, -1.5, -10]).times(Mat4.rotation(35, Vec.of(1,0,0)));  // (camera uses inverted matrix)
             context.globals.graphics_state.projection_transform = Mat4.perspective(Math.PI / 4, r, .1, 1000);
 
             // Initial shape definitions.
@@ -541,11 +570,10 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                     from = cylinderVec; // starting vec (default direction of cylinder)
                     to = track.minus(anchor); // vec to align with (describes edge)
                     // construct transformation matrix
-                    qMat = Quaternion.fromBetweenVectors(from, to).toMatrix4(true);
                     edgeLen = Math.sqrt(to[0]*to[0] + to[1]*to[1] + to[2]*to[2]);
                     lookat_transform = Mat4.identity()
                                         .times(Mat4.translation([anchor[0], anchor[1], anchor[2]]))
-                                        .times(qMat)
+                                        .times(getRotBetween(from, to))
                                         .times(Mat4.scale([0.05, 0.05, edgeLen]));
                     // color code if necessary
                     if (this.colorCoding) {
@@ -580,11 +608,10 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                     from = cylinderVec; // starting vec (default direction of cylinder)
                     to = track.minus(anchor); // vec to align with (describes edge)
                     // construct transformation matrix
-                    qMat = Quaternion.fromBetweenVectors(from, to).toMatrix4(true);
                     edgeLen = Math.sqrt(to[0]*to[0] + to[1]*to[1] + to[2]*to[2]);
                     lookat_transform = Mat4.identity()
                                         .times(Mat4.translation([anchor[0], anchor[1], anchor[2]]))
-                                        .times(qMat)
+                                        .times(getRotBetween(from, to))
                                         .times(Mat4.scale([0.05, 0.05, edgeLen]));
                     // color code if necessary
                     if (this.colorCoding) {
