@@ -325,6 +325,11 @@ let rots4 = {
     xz: false,  // slip
     yz: true    // twist
 };
+let colors = {
+    update: false,
+    cf: Color.of(1, 0, 0, 1),
+    cb: Color.of(0, 1, 0, 1)
+}
 
 window.Hypercube_Scene = window.classes.Hypercube_Scene =
     class Hypercube_Scene extends Scene_Component {
@@ -336,14 +341,15 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 context.register_scene_component(new Movement_Controls(context, control_box.parentElement.insertCell()));
             // Set up graphics state.
             const r = context.width / context.height;
-            context.globals.graphics_state.camera_transform = Mat4.translation([0, -1.5, -10]);  // (camera uses inverted matrix)
+            context.globals.graphics_state.camera_transform = Mat4.translation([0, -1.5, -10]).times(Mat4.rotation(45, Vec.of(1,0,0)));  // (camera uses inverted matrix)
             context.globals.graphics_state.projection_transform = Mat4.perspective(Math.PI / 4, r, .1, 1000);
 
             // Initial shape definitions.
             let shapes = {
                 'cube': new Cube_Wireframe(),
                 'hypercube': new Hypercube_Wireframe(),
-                'sphere': new Subdivision_Sphere(4)
+                'sphere': new Subdivision_Sphere(4),
+                'surface': new Displacement_Rect(763, 762, img)
             };
             for (let i = 0, vertexCount = shapes['cube'].vertices.length; i < vertexCount; i++) {
                 shapes['cs' + i] = new Subdivision_Sphere(2); // 3c cube vertices
@@ -364,7 +370,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             this.ctx = context;
 
             // Define basic lights/materials/etc.
-//             this.lights = [new Light(Vec.of(0, 5, 5, 1), Color.of(1, .4, 1, 1), 100000)];
+            // this.lights = [new Light(Vec.of(0, 5, 5, 1), Color.of(1, .4, 1, 1), 100000)];
             this.white = context.get_instance(Basic_Shader).material();
             this.clay = context.get_instance(Phong_Shader).material(Color.of(.9, .5, .9, 1), {
                 ambient: .4,
@@ -396,18 +402,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             // Toggles color-coding of front/back faces/cells of shapes.
             this.key_triggered_button("Toggle Color Coding", ["n"], () => {
                 this.colorCoding = !this.colorCoding;
-                let cf, cb, cc;
-                if (this.colorCoding) {
-                    cf = this.colors.cf;
-                    cb = this.colors.cb;
-                    cc = this.colors.cc;
-                } else {
-                    cf = cb = cc = this.colors.cc;
-                }
-                for (let shape in this.shapes) {
-                    this.shapes[shape].setColors(cf, cb, cc);
-                    this.shapes[shape].copy_onto_graphics_card(this.ctx.gl); // dynamically update color defs
-                }
+                this.refreshColors();
             });
             // Toggles dynamic transforms of shapes. (only static rotations for now)
             this.key_triggered_button("Toggle Rotation", ["m"], () => {
@@ -443,15 +438,41 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             });
         }
 
+        refreshColors() {
+            let cf, cb, cc;
+            if (this.colorCoding) {
+                cf = this.colors.cf;
+                cb = this.colors.cb;
+                cc = this.colors.cc;
+            } else {
+                cf = cb = cc = this.colors.cc;
+            }
+            for (let shape in this.shapes) {
+                if (this.shapes[shape].setColors) {
+                    this.shapes[shape].setColors(cf, cb, cc);
+                    this.shapes[shape].copy_onto_graphics_card(this.ctx.gl); // dynamically update color defs
+                }
+            }
+        }
+
         display(graphics_state) {
             // Set up scene contents.
             const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
             let c = this.shapes.cube;
             let hc = this.shapes.hypercube;
+            let s = this.shapes.surface;
             let cylinderVec = Vec.of(0, 0, 1); // initial alignment of directional cylinder (anchored at one end)
             let cubeAnchor = Vec.of(-4, 0, 0); // center pos of dynamic cube
             let hypercubeAnchor = Vec.of(4, 0, 0); // center pos of dynamic hypercube
             let lightSourceAnchor = this.shapes.sphere;    // ball of light
+
+            // Perform dynamic recoloring.
+            if (colors.update) {
+                this.colors.cf = colors.cf;
+                this.colors.cb = colors.cb;
+                this.refreshColors();
+                colors.update = false;
+            }
 
             // Perform dynamic transforms (edit shape defs).
             if (!this.frozen) {
@@ -469,10 +490,14 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             }
 
             // Perform static transforms (manipulate shapes).
-            let model_transform = Mat4.identity();
+            let model_transform = Mat4.identity()
+                .times(Mat4.translation([0,-3,0]))
+                .times(Mat4.rotation(-90, Vec.of(1,0,0)))
+                .times(Mat4.scale([10, 10, 1]));
+            s.draw(graphics_state, model_transform, this.plastic.override({color: this.colors.cc}));
 
             // Creating a ball of light that will interact with our wireframe objects
-            model_transform = model_transform.times(Mat4.scale([0.75, 0.75, 0.75])).times(Mat4.translation([this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord]));
+            model_transform = Mat4.identity().times(Mat4.scale([0.75, 0.75, 0.75])).times(Mat4.translation([this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord]));
             if (!this.bloomeffect) {
                 lightSourceAnchor.draw(graphics_state, model_transform, this.light_source.material);
             }
