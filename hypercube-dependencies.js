@@ -88,6 +88,49 @@ window.Subdivision_Cylinder = window.classes.Subdivision_Cylinder =
         }
     };
 
+window.Displacement_Rect = window.classes.Displacement_Rect =
+    class Displacement_Rect extends Shape {
+        constructor(w, h, img) {
+            super("positions", "normals");
+
+            // Metrics.
+            let trueW = (w>h) ? 1 : (w/h), minX = -trueW/2;
+            let trueH = (h>w) ? 1 : (h/w), minY = -trueH/2;
+            let dx = trueW / w, dy = trueH / h;
+            // Get displacement data.
+            let cv = document.createElement('canvas');
+            cv.width = w;
+            cv.height = h;
+            let ctx = cv.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            let data = ctx.getImageData(0,0,w,h).data;
+
+            // Generate (x,y) points defining on rectangular sheet.
+            let disp;
+            for (let x = 0; x < w; x++) {
+                for (let y = 0; y < h; y++) {
+                    disp = 1 * data[ 4*(x+w*y) ]/255;
+                    this.positions.push(...Vec.cast( [minX+x*dx, minY+y*dy, disp] ));
+                    // this.normals.push(...Vec.cast( [0, 0, 1] ));
+                    this.normals.push(...Vec.cast( [disp, disp, 1] ));
+                }
+            }
+            // Build faces.
+            for (let x = 0; x < w-1; x++) {
+                for (let y = 0; y < h-1; y++) {
+                    this.indices.push( (x) + w*(y), (x) + w*(y+1), (x+1) + w*(y+1) );
+                    this.indices.push( (x) + w*(y), (x+1) + w*(y+1), (x+1) + w*(y) );
+                }
+            }
+
+            // Get displacement data.
+                //
+            // Build normals.
+            // for (let p of this.points) {
+            //     this.normals.push(...Vec.cast( [0, 0, 1] ));
+            // }
+        }
+    };
 
 window.Basic_Shader = window.classes.Basic_Shader =
     class Basic_Shader extends Shader             // Subclasses of Shader each store and manage a complete GPU program.  This Shader is

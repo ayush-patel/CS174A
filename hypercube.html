@@ -9,8 +9,8 @@
     <script src="tiny-graphics.js"></script>
     <!-- Import/Include/Load dependencies. -->
     <script src="holocomp.js"></script>                 <!-- holocomp.js by Narayana Adisasmito-Smith (C) 2019; subset -->
-    <script src="quaternion.js"></script>               <!-- quaternion.js by Robert Eisele (C) 2016; placeholder until self-developed library finalized -->
     <script src="hypercube-dependencies.js"></script>   <!-- based on tiny-graphics/dependencies.js by Garett Ridge (C) 2019, with additions by Narayana Adisasmito-Smith -->
+    <script src="tinycolor-min.js"></script>            <!-- tinycolor.js by Brian Grinstead (C) 2016 -->
     <!-- Init main app. -->
     <script src="hypercube.js"></script>
 
@@ -136,19 +136,30 @@
 
 <div id="main-canvas" class="canvas-widget"></div>
 <script>
-    // ********************* THE ENTRY POINT OF YOUR WHOLE PROGRAM STARTS HERE *********************
-    // Use this code to embed a widget into any web page.  The widget includes a 3D WebGL area
-    // (an HTML canvas) and various panels of controls.
+    // Ensure resources are loaded before initializing.
+    let img = new Image(763, 762);
+    img.src = 'assets/disp-map.jpg';
+    img.crossorigin = 'anonymous';
+    img.onload = function() {
+        // ********************* THE ENTRY POINT OF YOUR WHOLE PROGRAM STARTS HERE *********************
+        // Use this code to embed a widget into any web page.  The widget includes a 3D WebGL area
+        // (an HTML canvas) and various panels of controls.
 
-    const scenes = ["Hypercube_Scene"];
+        const scenes = ["Hypercube_Scene"];
 
-    // First, list the names of scenes we will add to our canvas.  These will register themselves
-    // with this widget's Canvas_Manager so that their code can be called upon every time a
-    // draw / keyboard / mouse event happens on the web page.
-    new Canvas_Widget("main-canvas", scenes);
-    // Use the Canvas_Widget class to display the WebGL demo.  Pass in
-    // the name of the HTML element we are to replace with the widget.
+        // First, list the names of scenes we will add to our canvas.  These will register themselves
+        // with this widget's Canvas_Manager so that their code can be called upon every time a
+        // draw / keyboard / mouse event happens on the web page.
+        let cw = new Canvas_Widget("main-canvas", scenes);
+        // Use the Canvas_Widget class to display the WebGL demo.  Pass in
+        // the name of the HTML element we are to replace with the widget.
+
+        // For if we ever need to resize the canvas. (full-screen toggle?)
+        // cw.canvas_manager.set_size( [ 1080, 600 ] );
+    }
 </script>
+
+<!-- <script src="holocomp.js"></script> -->
 
 <script>
     // Define HoloComp graphics settings.
@@ -156,7 +167,7 @@
         color: '#88f7fc',       // light blue
         glowColor: '#00ffff',   // medium blue
         borderWidth: 1,
-        fontSize: 12,
+        fontSize: 14,
         fontFamily: 'Consolas'
     };
 
@@ -199,6 +210,23 @@
         rots4['yz'] = newState;
     });
     tbyz.label.text = 'Twist  (about yz)';
+
+    // Color selectors.
+    let colorx = 880, colory = 20;
+    let cwl = new TextLabel(undefined, globalSettings, {
+        x: colorx, y: colory, w: 175, h: 14
+    });
+    cwl.text = 'Front Cell    Back Cell';
+    let cwf = new ColorWheel('#ff0000', {x: colorx+40, y: colory+65, r: 40}, function(color) {
+        let c = color.toRgb();
+        colors.cf = Color.of(c.r/255, c.g/255, c.b/255, 1);
+        colors.update = true;
+    });
+    let cwb = new ColorWheel('#00ff00', {x: colorx+141, y: colory+65, r: 40}, function(color) {
+        let c = color.toRgb();
+        colors.cb = Color.of(c.r/255, c.g/255, c.b/255, 1);
+        colors.update = true;
+    });
 </script>
 
 </body>
