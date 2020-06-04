@@ -73,8 +73,8 @@ function ncube(dim) { // Programatically generate vertices and edges for n-dimen
 
 //// STATIC SHAPE DEFINITIONS ////
 
-window.Cube = window.classes.Cube =
-    class Cube extends Shape {
+window.Box = window.classes.Box =
+    class Box extends Shape {
         constructor() {
             super("positions", "normals"); // Name the values we'll define per each vertex.  They'll have positions and normals.
 
@@ -373,7 +373,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 'cube': new Cube_Wireframe(),
                 'hypercube': new Hypercube_Wireframe(),
                 'sphere': new Subdivision_Sphere(4),
-                'box': new Cube()
+                'box': new Box()
             };
             for (let i = 0, vertexCount = shapes['cube'].vertices.length; i < vertexCount; i++) {
                 shapes['cs' + i] = new Subdivision_Sphere(2); // 3c cube vertices
@@ -406,7 +406,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 cb: Color.of(0, 1, 0, 1), // green back
                 cc: Color.of(1, 1, 1, 1)  // white connectors
             };
-            this.ivory = Color.of(1, 1, 0.94, 1); //ivory color for the background
+            this.bg_color = this.clay.override({color: Color.of(0.8, 1, 0.94, 1)}); //ivory color for the background
 
             this.light_source = {
                 material: context.get_instance(Phong_Shader).material(Color.of(1, 1, 1, 1), {ambient: 1}, {smoothness: 1}), // defining material for ball of light
@@ -483,6 +483,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             let cubeAnchor = Vec.of(-4, 0, 0); // center pos of dynamic cube
             let hypercubeAnchor = Vec.of(4, 0, 0); // center pos of dynamic hypercube
             let lightSourceAnchor = this.shapes.sphere;    // ball of light
+            let box = this.shapes.box;
 
             // Perform dynamic transforms (edit shape defs).
             if (!this.frozen) {
@@ -512,6 +513,19 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             }
             this.lights = [new Light(Vec.of(this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord, 1), Color.of(1, 1, 1, 1), 100000)];
             graphics_state.lights = this.lights;
+
+            //Creating our background using thin cubes acting as 4 planes (bottom, behind, left, and right)
+            model_transform = Mat4.identity().times(Mat4.translation([0, 1, -3])).times(Mat4.scale([7, 4, 0.1]));
+            box.draw(graphics_state, model_transform, this.bg_color); //back surface
+
+            model_transform = Mat4.identity().times(Mat4.rotation(- Math.PI / 2 , Vec.of(1, 0, 0))).times(Mat4.translation([0, -1, -3])).times(Mat4.scale([7, 4, 0.1]));
+            box.draw(graphics_state, model_transform, this.bg_color); //bottom surface
+            
+            model_transform = Mat4.identity().times(Mat4.rotation(- Math.PI / 2, Vec.of(0, 1, 0))).times(Mat4.translation([1, 1, -7])).times(Mat4.scale([4, 4, 0.1]));
+            box.draw(graphics_state, model_transform, this.bg_color); //right surface
+
+            model_transform = Mat4.identity().times(Mat4.rotation(- Math.PI / 2, Vec.of(0, 1, 0))).times(Mat4.translation([1, 1, 7])).times(Mat4.scale([4, 4, 0.1]));
+            box.draw(graphics_state, model_transform, this.bg_color); //right surface
 
             // Do we render flat wireframes...?
             if (this.wireframe) {
