@@ -100,6 +100,35 @@ function getRotBetween(from, to) { // Use quaternion to generate 4x4 matrix perf
 
 ///////////////////////////////////////////////////////////////////
 
+//// STATIC SHAPE DEFINITIONS ////
+
+window.Box = window.classes.Box =
+    class Box extends Shape {
+        constructor() {
+            super("positions", "normals"); // Name the values we'll define per each vertex.  They'll have positions and normals.
+
+            // First, specify the vertex positions -- just a bunch of points that exist at the corners of an imaginary cube.
+            this.positions.push(...Vec.cast(
+                [-1, -1, -1], [1, -1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, -1], [-1, 1, -1], [1, 1, 1], [-1, 1, 1],
+                [-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, 1], [1, -1, -1], [1, 1, 1], [1, 1, -1],
+                [-1, -1, 1], [1, -1, 1], [-1, 1, 1], [1, 1, 1], [1, -1, -1], [-1, -1, -1], [1, 1, -1], [-1, 1, -1]));
+            // Supply vectors that point away from eace face of the cube.  They should match up with the points in the above list
+            // Normal vectors are needed so the graphics engine can know if the shape is pointed at light or not, and color it accordingly.
+            this.normals.push(...Vec.cast(
+                [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0],
+                [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0],
+                [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, -1], [0, 0, -1], [0, 0, -1], [0, 0, -1]));
+
+            // Those two lists, positions and normals, fully describe the "vertices".  What's the "i"th vertex?  Simply the combined
+            // data you get if you look up index "i" of both lists above -- a position and a normal vector, together.  Now let's
+            // tell it how to connect vertex entries into triangles.  Every three indices in this list makes one triangle:
+            this.indices.push(0, 1, 2, 1, 3, 2, 4, 5, 6, 5, 7, 6, 8, 9, 10, 9, 11, 10, 12, 13,
+                14, 13, 15, 14, 16, 17, 18, 17, 19, 18, 20, 21, 22, 21, 23, 22);
+        }
+    };
+
+///////////////////////////////////////////////////////////////////
+
 //// DYNAMIC SHAPE DEFINITIONS ////
 
 window.Cube_Wireframe = window.classes.Cube_Wireframe =
@@ -378,6 +407,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 'cube': new Cube_Wireframe(),
                 'hypercube': new Hypercube_Wireframe(),
                 'sphere': new Subdivision_Sphere(4),
+                'box': new Box()
                 'surface': new Displacement_Rect(763, 762, img)
             };
             for (let i = 0, vertexCount = shapes['cube'].vertices.length; i < vertexCount; i++) {
@@ -411,6 +441,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 cb: Color.of(0, 1, 0, 1), // green back
                 cc: Color.of(1, 1, 1, 1)  // white connectors
             };
+            this.bg_color = this.clay.override({color: Color.of(0.8, 1, 0.94, 1)}); //ivory color for the background
 
             this.light_source = {
                 material: context.get_instance(Phong_Shader).material(Color.of(1, 1, 1, 1), {ambient: 1}, {smoothness: 1}), // defining material for ball of light
@@ -494,6 +525,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             let cubeAnchor = Vec.of(-4, 0, 0); // center pos of dynamic cube
             let hypercubeAnchor = Vec.of(4, 0, 0); // center pos of dynamic hypercube
             let lightSourceAnchor = this.shapes.sphere;    // ball of light
+            let box = this.shapes.box;
 
             // Perform dynamic recoloring.
             if (colors.update) {
@@ -535,6 +567,19 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             }
             this.lights = [new Light(Vec.of(this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord, 1), Color.of(1, 1, 1, 1), 100000)];
             graphics_state.lights = this.lights;
+
+            //Creating our background using thin cubes acting as 4 planes (bottom, behind, left, and right)
+            model_transform = Mat4.identity().times(Mat4.translation([0, 1, -3])).times(Mat4.scale([7, 4, 0.1]));
+            box.draw(graphics_state, model_transform, this.bg_color); //back surface
+
+            model_transform = Mat4.identity().times(Mat4.rotation(- Math.PI / 2 , Vec.of(1, 0, 0))).times(Mat4.translation([0, -1, -3])).times(Mat4.scale([7, 4, 0.1]));
+            box.draw(graphics_state, model_transform, this.bg_color); //bottom surface
+            
+            model_transform = Mat4.identity().times(Mat4.rotation(- Math.PI / 2, Vec.of(0, 1, 0))).times(Mat4.translation([1, 1, -7])).times(Mat4.scale([4, 4, 0.1]));
+            box.draw(graphics_state, model_transform, this.bg_color); //right surface
+
+            model_transform = Mat4.identity().times(Mat4.rotation(- Math.PI / 2, Vec.of(0, 1, 0))).times(Mat4.translation([1, 1, 7])).times(Mat4.scale([4, 4, 0.1]));
+            box.draw(graphics_state, model_transform, this.bg_color); //right surface
 
             // Do we render flat wireframes...?
             if (this.wireframe) {
