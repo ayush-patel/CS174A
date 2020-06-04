@@ -407,7 +407,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 'cube': new Cube_Wireframe(),
                 'hypercube': new Hypercube_Wireframe(),
                 'sphere': new Subdivision_Sphere(4),
-                'box': new Box()
+                'box': new Box(),
                 'surface': new Displacement_Rect(763, 762, img)
             };
             for (let i = 0, vertexCount = shapes['cube'].vertices.length; i < vertexCount; i++) {
