@@ -358,7 +358,127 @@ let colors = {
     update: false,
     cf: Color.of(1, 0, 0, 1),
     cb: Color.of(0, 1, 0, 1)
-}
+};
+let cam = {
+    yaw: 0,
+    pitch: -20,
+    roll: 0,
+    dist: 10,
+
+    maxPitch: 89,
+    maxZoom: 15,
+    rotSpeed: 0.01,
+    zoomSpeed: 0.1,
+
+    dirty: true,
+    mtx: Mat4.identity(),
+    updateMtx: function() {
+        if (this.dirty) {
+            this.mtx = Mat4.inverse( Mat4.identity()
+                .times( Mat4.rotation(this.yaw, Vec.of(0,1,0)) )
+                .times( Mat4.rotation(this.pitch, Vec.of(1,0,0)) )
+                .times( Mat4.translation(Vec.of(0,0,this.dist)) )
+                );
+            this.dirty = false;
+        }
+        return this.mtx;
+    },
+    yawBy: function(y) {
+        this.dirty = true;
+        this.yaw += y;
+        this.yaw = this.yaw % 360;
+    },
+    pitchBy: function(p) {
+        this.dirty = true;
+        let np = this.pitch + p;
+        this.pitch = (np > this.maxPitch || np < -this.maxPitch) ? this.pitch : np;
+    },
+    zoomBy: function(z) {
+        this.dirty = true;
+        let nz = this.dist + z;
+        this.dist = (nz > 1 && nz < this.maxZoom) ? nz : this.dist;
+    },
+
+    keyloops: {},
+    keydown: function(e) {
+        let keys = [37, 38, 39, 40]
+        if (keys.indexOf(e.keyCode)) e.preventDefault();
+        let self = cam; // freeze context
+        switch (e.keyCode) {
+            case 65: // a
+                if (self.keyloops['yawleft']) return;
+                self.keyloops['yawleft'] = setInterval(()=>{
+                    self.yawBy(-self.rotSpeed);
+                }, 10);
+                break;
+            case 68: // d
+                if (self.keyloops['yawright']) return;
+                self.keyloops['yawright'] = setInterval(()=>{
+                    self.yawBy(self.rotSpeed);
+                }, 10);
+                break;
+            case 87: // w
+                if (self.keyloops['pitchup']) return;
+                self.keyloops['pitchup'] = setInterval(()=>{
+                    self.pitchBy(-self.rotSpeed);
+                }, 10);
+                break;
+            case 83: // s
+                if (self.keyloops['pitchdown']) return;
+                self.keyloops['pitchdown'] = setInterval(()=>{
+                    self.pitchBy(self.rotSpeed);
+                }, 10);
+                break;
+
+
+            case 82: // r
+                if (self.keyloops['zoomin']) return;
+                self.keyloops['zoomin'] = setInterval(()=>{
+                    self.zoomBy(-self.zoomSpeed);
+                }, 10);
+                break;
+            case 70: // f
+                if (self.keyloops['zoomout']) return;
+                self.keyloops['zoomout'] = setInterval(()=>{
+                    self.zoomBy(self.zoomSpeed);
+                }, 10);
+                break;
+        }
+    },
+    keyup: function(e) {
+        let self = cam; // freeze context
+        switch (e.keyCode) {
+            case 65: // a
+                clearInterval(self.keyloops['yawleft']);
+                delete self.keyloops['yawleft'];
+                break;
+            case 68: // d
+                clearInterval(self.keyloops['yawright']);
+                delete self.keyloops['yawright'];
+                break;
+            case 87: // w
+                clearInterval(self.keyloops['pitchup']);
+                delete self.keyloops['pitchup'];
+                break;
+            case 83: // s
+                clearInterval(self.keyloops['pitchdown']);
+                delete self.keyloops['pitchdown'];
+                break;
+
+
+            case 82: // r
+                clearInterval(self.keyloops['zoomin']);
+                delete self.keyloops['zoomin'];
+                break;
+            case 70: // f
+                clearInterval(self.keyloops['zoomout']);
+                delete self.keyloops['zoomout'];
+                break;
+        }
+    }
+};
+window.addEventListener('keydown', cam.keydown);
+window.addEventListener('keyup', cam.keyup);
 
 window.Hypercube_Scene = window.classes.Hypercube_Scene =
     class Hypercube_Scene extends Scene_Component {
@@ -366,8 +486,8 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             super(context, control_box);
 
             // Define secondary Scene that provides movement controls.
-            if (!context.globals.has_controls)
-                context.register_scene_component(new Movement_Controls(context, control_box.parentElement.insertCell()));
+            // if (!context.globals.has_controls)
+            //     context.register_scene_component(new Movement_Controls(context, control_box.parentElement.insertCell()));
             // Set up graphics state.
             const r = context.width / context.height;
             context.globals.graphics_state.camera_transform = Mat4.translation([0, -1.5, -10]).times(Mat4.rotation(35, Vec.of(1,0,0)));  // (camera uses inverted matrix)
@@ -494,6 +614,9 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             let cubeAnchor = Vec.of(-4, 0, 0); // center pos of dynamic cube
             let hypercubeAnchor = Vec.of(4, 0, 0); // center pos of dynamic hypercube
             let lightSourceAnchor = this.shapes.sphere;    // ball of light
+
+            // Update camera.
+            this.ctx.globals.graphics_state.camera_transform = cam.updateMtx();
 
             // Perform dynamic recoloring.
             if (colors.update) {
