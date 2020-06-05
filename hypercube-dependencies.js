@@ -382,7 +382,7 @@ window.Phong_Shader = window.classes.Phong_Shader =
         }
     };
 
-    window.BloomEffect = window.classes.BloomEffect =
+window.BloomEffect = window.classes.BloomEffect =
     class BloomEffect extends Shader          // THE DEFAULT SHADER: This uses the Phong Reflection Model, with optional Gouraud shading.
         // Wikipedia has good defintions for these concepts.  Subclasses of class Shader each store
         // and manage a complete GPU program.  This particular one is a big "master shader" meant to
@@ -447,6 +447,8 @@ window.Phong_Shader = window.classes.Phong_Shader =
         varying vec3 L[N_LIGHTS], H[N_LIGHTS];
         varying float dist[N_LIGHTS];
         varying vec4 v_texCoord;
+        varying vec2 vertPos;
+
         
         vec3 phong_model_lights( vec3 N )
           { vec3 result = vec3(0.0);
@@ -509,49 +511,41 @@ window.Phong_Shader = window.classes.Phong_Shader =
         fragment_glsl_code()           // ********* FRAGMENT SHADER *********
         {                            // A fragment is a pixel that's overlapped by the current triangle.
             // Fragments affect the final image or get discarded due to depth.
+            // ref: https://stackoverflow.com/questions/8166384/how-to-get-a-glow-shader-effect-in-opengl-es-2-0/45043547#45043547
             return `
-            precision mediump float;
-            precision mediump int;
+                uniform sampler2D u_textureCol;
+                uniform vec2 u_textureSize;
+                uniform float u_sigma;
+                uniform int u_width;
 
-            uniform sampler2D u_image;
-            uniform float blur;       
-            uniform int u_horizontalpass; 
-            uniform float sigma;
-
-            const vec2 texOffset = vec2(1.0, 1.0);
-
-            const float PI = 3.14159265;
-            uniform sampler2D texture;
-            void main()
-            {
-                vec2 p = v_texCoord.st;
-                float numBlurPixelsPerSide = blur / 2.0;
-
-                vec3 incrementalGaussian;
-                incrementalGaussian.x = 1.0 / (sqrt(2.0 * PI) * sigma);
-                incrementalGaussian.y = exp(-0.5 / (sigma * sigma));
-                incrementalGaussian.z = incrementalGaussian.y * incrementalGaussian.y;
-
-                vec4 avgValue = vec4(0.0, 0.0, 0.0, 0.0);
-                float coefficientSum = 0.0;
-
-                avgValue += texture2D(u_image, p) * incrementalGaussian.x;
-                coefficientSum += incrementalGaussian.x;
-                incrementalGaussian.xy *= incrementalGaussian.yz;
-
-                const float MAX_ITERATIONS = 100.0;
-
-                for (float i = 1.0; i <= MAX_ITERATIONS; i += 1.0) 
-                { 
-                    if (i >= numBlurPixelsPerSide) { break; }
-                    avgValue += texture2D(u_image, p - i * texOffset) * incrementalGaussian.x;         
-                    avgValue += texture2D(u_image, p + i * texOffset) * incrementalGaussian.x;         
-                    coefficientSum += 2.0 * incrementalGaussian.x;
-                    incrementalGaussian.xy *= incrementalGaussian.yz;
+                float CalcGauss( float x, float sigma ) 
+                {
+                  float coeff = 1.0 / (2.0 * 3.14157 * sigma);
+                  float expon = -(x*x) / (2.0 * sigma);
+                  return (coeff*exp(expon));
                 }
 
-                gl_FragColor = avgValue / coefficientSum;
-            }`;
+                void main()
+                {
+                    vec2 texC = vertPos.st * 0.5 + 0.5;
+                    vec4 texCol = texture2D( u_textureCol, texC );
+                    vec4 gaussCol = vec4( texCol.rgb, 1.0 );
+                    vec2 step = 1.0 / u_textureSize;
+                    const int MAX_ITERS = 100;
+                    for ( int i = 1; i <= MAX_ITERS; ++ i )
+                    {
+                        vec2 actStep = vec2( float(i) * step.x, 0.0 );   // this is for the X-axis
+                        // vec2 actStep = vec2( 0.0, float(i) * step.y );   this would be for the Y-axis
+
+                        float weight = CalcGauss( float(i) / float(u_width), u_sigma );
+                        texCol = texture2D( u_textureCol, texC + actStep );    
+                        gaussCol += vec4( texCol.rgb * weight, weight );
+                        texCol = texture2D( u_textureCol, texC - actStep );
+                        gaussCol += vec4( texCol.rgb * weight, weight );
+                    }
+                    gaussCol.rgb /= gaussCol.w;
+                    gl_FragColor = vec4( gaussCol.rgb, 1.0 );
+                }`;
         }
 
         // Define how to synchronize our JavaScript's variables to the GPU's:
