@@ -428,6 +428,14 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             // We need to save context (canvas_manager) so we can dynamically update later using this.shapes[shape].copy_onto_graphics_card(this.ctx.gl)
             this.ctx = context;
 
+                        // Define state variables and misc settings.
+            this.colorCoding = true;
+            this.frozen = false;
+            this.wireframe = false;
+            this.bloomeffect = false;
+            this.white_light = true;
+            this.LightColor = Color.of(1, 1, 1, 1);
+
             // Define basic lights/materials/etc.
             // this.lights = [new Light(Vec.of(0, 5, 5, 1), Color.of(1, .4, 1, 1), 100000)];
             this.white = context.get_instance(Basic_Shader).material();
@@ -444,18 +452,14 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             this.bg_color = this.clay.override({color: Color.of(0.8, 1, 0.94, 1)}); //ivory color for the background
 
             this.light_source = {
-                material: context.get_instance(Phong_Shader).material(Color.of(1, 1, 1, 1), {ambient: 1}, {smoothness: 1}), // defining material for ball of light
-                bloom_material: context.get_instance(BloomEffect).material(Color.of(1, 1, 1, 1), {ambient: 1}, {smoothness: 1}), // ball of light with bloom effect
+                material: context.get_instance(Phong_Shader).material(this.LightColor, {ambient: 1}, {smoothness: 1}), // defining material for ball of light
+                bloom_material: context.get_instance(BloomEffect).material(this.LightColor, {ambient: 1}, {smoothness: 1}), // ball of light with bloom effect
                 x_coord: 0,
                 y_coord: 0,
                 z_coord: 0
             }
 
-            // Define state variables and misc settings.
-            this.colorCoding = true;
-            this.frozen = false;
-            this.wireframe = false;
-            this.bloomeffect = false;
+            this.lights = [new Light(Vec.of(this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord, 1), this.LightColor, 100000)];
         }
 
         make_control_panel() {
@@ -503,6 +507,19 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
 
             this.key_triggered_button("Bloom Effect", ["l"], () => {
                 this.bloomeffect = !this.bloomeffect; 
+            });
+
+            this.key_triggered_button("Change Light Color", ["q"], () => {
+                this.white_light = !this.white_light;
+                
+                if(!this.white_light)
+                {
+                    this.LightColor = Color.of(Math.random(), Math.random(), Math.random(), 1);
+                }
+                else
+                {
+                    this.LightColor = Color.of(1, 1, 1, 1);
+                }
             });
         }
 
@@ -567,13 +584,16 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
 
             // Creating a ball of light that will interact with our wireframe objects
             model_transform = Mat4.identity().times(Mat4.scale([0.75, 0.75, 0.75])).times(Mat4.translation([this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord]));
+            
             if (!this.bloomeffect) {
-                lightSourceAnchor.draw(graphics_state, model_transform, this.light_source.material);
+                lightSourceAnchor.draw(graphics_state, model_transform, this.light_source.material.override({color: this.LightColor}));
             }
             else {
-                lightSourceAnchor.draw(graphics_state, model_transform, this.light_source.bloom_material);
+                lightSourceAnchor.draw(graphics_state, model_transform, this.light_source.bloom_material.override({color: this.LightColor}));
             }
-            this.lights = [new Light(Vec.of(this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord, 1), Color.of(1, 1, 1, 1), 100000)];
+            
+            this.lights = [new Light(Vec.of(this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord, 1), this.LightColor, 100000)];
+
             graphics_state.lights = this.lights;
 
             //Creating our background using thin cubes acting as 4 planes (bottom, behind, left, and right)
