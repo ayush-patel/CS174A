@@ -491,6 +491,14 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 this.light_source.x_coord += 1; 
             });
 
+            this.key_triggered_button("Move Light In", ["i"], () => {
+                this.light_source.z_coord -= 1; 
+            });
+
+            this.key_triggered_button("Move Light Out", ["o"], () => {
+                this.light_source.z_coord += 1; 
+            });
+
             this.new_line();
 
             this.key_triggered_button("Bloom Effect", ["l"], () => {
