@@ -399,7 +399,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 context.register_scene_component(new Movement_Controls(context, control_box.parentElement.insertCell()));
             // Set up graphics state.
             const r = context.width / context.height;
-            context.globals.graphics_state.camera_transform = Mat4.translation([0, -1.5, -10]).times(Mat4.rotation(35, Vec.of(1,0,0)));  // (camera uses inverted matrix)
+            context.globals.graphics_state.camera_transform = Mat4.translation([0, -1.5, -14])  // (camera uses inverted matrix)
             context.globals.graphics_state.projection_transform = Mat4.perspective(Math.PI / 4, r, .1, 1000);
 
             // Initial shape definitions.
@@ -552,9 +552,9 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
 
             // Perform static transforms (manipulate shapes).
             let model_transform = Mat4.identity()
-                .times(Mat4.translation([0,-3,0]))
-                .times(Mat4.rotation(-90, Vec.of(1,0,0)))
-                .times(Mat4.scale([10, 10, 1]));
+                .times(Mat4.translation([0,-3,1]))
+                .times(Mat4.rotation(- Math.PI / 2, Vec.of(1,0,0)))
+                .times(Mat4.scale([14, 8, 1]));
             s.draw(graphics_state, model_transform, this.plastic.override({color: this.colors.cc}));
 
             // Creating a ball of light that will interact with our wireframe objects
@@ -579,7 +579,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             box.draw(graphics_state, model_transform, this.bg_color); //right surface
 
             model_transform = Mat4.identity().times(Mat4.rotation(- Math.PI / 2, Vec.of(0, 1, 0))).times(Mat4.translation([1, 1, 7])).times(Mat4.scale([4, 4, 0.1]));
-            box.draw(graphics_state, model_transform, this.bg_color); //right surface
+            box.draw(graphics_state, model_transform, this.bg_color); //left surface
 
             // Do we render flat wireframes...?
             if (this.wireframe) {
