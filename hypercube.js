@@ -450,7 +450,10 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 cc: Color.of(1, 1, 1, 1)  // white connectors
             };
             this.bg_color = this.clay.override({color: Color.of(0.8, 1, 0.94, 1)}); //ivory color for the background
-
+            this.shadow = context.get_instance(Shadow_Shader)
+			.material(Color.of(1,0.5,1,1),
+            {ambient: 1.0, diffusivity: 0.0, specularity: 0.0 });
+            
             this.light_source = {
                 material: context.get_instance(Phong_Shader).material(this.LightColor, {ambient: 1}, {smoothness: 1}), // defining material for ball of light
                 bloom_material: context.get_instance(BloomEffect).material(this.LightColor, {ambient: 1}, {smoothness: 1}), // ball of light with bloom effect
@@ -580,7 +583,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 .times(Mat4.translation([0,-3,1]))
                 .times(Mat4.rotation(- Math.PI / 2, Vec.of(1,0,0)))
                 .times(Mat4.scale([14, 8, 1]));
-            s.draw(graphics_state, model_transform, this.plastic.override({color: this.colors.cc}));
+//             s.draw(graphics_state, model_transform, this.plastic.override({color: this.colors.cc}));
 
             // Creating a ball of light that will interact with our wireframe objects
             model_transform = Mat4.identity().times(Mat4.scale([0.75, 0.75, 0.75])).times(Mat4.translation([this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord]));
@@ -592,9 +595,15 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 lightSourceAnchor.draw(graphics_state, model_transform, this.light_source.bloom_material.override({color: this.LightColor}));
             }
             
+
             this.lights = [new Light(Vec.of(this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord, 1), this.LightColor, 100000)];
 
             graphics_state.lights = this.lights;
+
+            //temo objectij
+            model_transform = Mat4.identity().times(Mat4.translation([0, -2, 0]));
+            box.draw(graphics_state, model_transform, this.plastic);
+            box.draw(graphics_state, model_transform, this.shadow);
 
             //Creating our background using thin cubes acting as 4 planes (bottom, behind, left, and right)
             model_transform = Mat4.identity().times(Mat4.translation([0, 1, -3])).times(Mat4.scale([7, 4, 0.1]));
