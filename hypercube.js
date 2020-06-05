@@ -457,8 +457,8 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             this.light_source = {
                 material: context.get_instance(Phong_Shader).material(this.LightColor, {ambient: 1}, {smoothness: 1}), // defining material for ball of light
                 bloom_material: context.get_instance(BloomEffect).material(this.LightColor, {ambient: 1}, {smoothness: 1}), // ball of light with bloom effect
-                x_coord: 0,
-                y_coord: 0,
+                x_coord: 7,
+                y_coord: 11,
                 z_coord: 0
             }
 
