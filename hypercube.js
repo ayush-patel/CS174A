@@ -550,8 +550,8 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             let hc = this.shapes.hypercube;
             let s = this.shapes.surface;
             let cylinderVec = Vec.of(0, 0, 1); // initial alignment of directional cylinder (anchored at one end)
-            let cubeAnchor = Vec.of(-4, 0, 0); // center pos of dynamic cube
-            let hypercubeAnchor = Vec.of(4, 0, 0); // center pos of dynamic hypercube
+            let cubeAnchor = Vec.of(-4, 3, 0); // center pos of dynamic cube
+            let hypercubeAnchor = Vec.of(4, 3, 0); // center pos of dynamic hypercube
             let lightSourceAnchor = this.shapes.sphere;    // ball of light
             let box = this.shapes.box;
 
@@ -580,10 +580,10 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
 
             // Perform static transforms (manipulate shapes).
             let model_transform = Mat4.identity()
-                .times(Mat4.translation([0,-3,1]))
+                .times(Mat4.translation([0, 0, 1]))
                 .times(Mat4.rotation(- Math.PI / 2, Vec.of(1,0,0)))
                 .times(Mat4.scale([14, 8, 1]));
-//             s.draw(graphics_state, model_transform, this.plastic.override({color: this.colors.cc}));
+            s.draw(graphics_state, model_transform, this.plastic.override({color: this.colors.cc}));
 
             // Creating a ball of light that will interact with our wireframe objects
             model_transform = Mat4.identity().times(Mat4.scale([0.75, 0.75, 0.75])).times(Mat4.translation([this.light_source.x_coord, this.light_source.y_coord, this.light_source.z_coord]));
@@ -601,7 +601,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
             graphics_state.lights = this.lights;
 
             //temo objectij
-            model_transform = Mat4.identity().times(Mat4.translation([0, -2, 0]));
+            model_transform = Mat4.identity().times(Mat4.translation([0, 2, 0]));
             box.draw(graphics_state, model_transform, this.plastic);
             box.draw(graphics_state, model_transform, this.shadow);
 
@@ -641,6 +641,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                     if (this.colorCoding) {vc = (c.frontV.indexOf(i) != -1) ? this.colors.cf : this.colors.cb;}
                     offset_transform = model_transform.times(Mat4.translation([v[0], v[1], v[2]])).times(Mat4.scale([0.15, 0.15, 0.15]));
                     this.shapes['cs' + i].draw(graphics_state, offset_transform, this.plastic.override({color: vc}));
+                    this.shapes['cs' + i].draw(graphics_state, offset_transform, this.shadow);
                 }
                 // Draw 3d edges on cube.
                 for (let i = 0, edgeCount = c.edges.length; i < edgeCount; i++) {
@@ -669,6 +670,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                     }
                     // draw
                     this.shapes['cc' + i].draw(graphics_state, lookat_transform, this.plastic.override({color: ec}));
+                    this.shapes['cc' + i].draw(graphics_state, lookat_transform, this.shadow);
                 }
 
                 // Set hypercube as reference origin.
@@ -679,6 +681,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                     if (this.colorCoding) {vc = (hc.frontV.indexOf(i) != -1) ? this.colors.cf : this.colors.cb;}
                     offset_transform = model_transform.times(Mat4.translation([v[0], v[1], v[2]])).times(Mat4.scale([0.15, 0.15, 0.15]));
                     this.shapes['hcs' + i].draw(graphics_state, offset_transform, this.plastic.override({color: vc}));
+                    this.shapes['hcs' + i].draw(graphics_state, offset_transform, this.shadow);
                 }
                 // Draw 3d edges on hypercube.
                 for (let i = 0, edgeCount = hc.edges.length; i < edgeCount; i++) {
@@ -707,6 +710,7 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                     }
                     // draw
                     this.shapes['hcc' + i].draw(graphics_state, lookat_transform, this.plastic.override({color: ec}));
+                    this.shapes['hcc' + i].draw(graphics_state, lookat_transform, this.shadow);
                 }
             }
         }
