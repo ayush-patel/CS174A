@@ -1,0 +1,46 @@
+HOW TO RUN:
+
+1. Please first run the host.bat file (if you're on Windows) or the host.command (if you're on Mac or Linux). This will start a server that serves our files on port 8000.
+
+2. In order to see our project, please open http://localhost:8000/hypercube.html on your browser.
+
+You can now use our project.
+
+
+WHAT OUR PROJECT IS:
+
+We have created a space where you can interact with 4-dimensional objects (specifically, hypercubes) to help you visualize and build an intuition for how 4-dimensional objects work. You can see an ordinary 3-dimensional cube and a hypercube next to each other and can control the rotations of the cubes as well as the lighting, and the placement of the camera.
+
+
+HOW TO USE:
+
+Upon opening the scene, you will see two solid wireframe cubes, one an ordinary 3-dimensional cube rotating about the yz plane and the other a 4-dimensional hypercube rotating about the yz and xw planes.
+
+You can select the planes of rotation for the cubes from the panel to the top-left. There are buttons for all possible axes of rotation. The xy, yz, and xz rotations apply to both cubes, while only the hypercube can rotate about the planes involving the fourth w axis. You can also press 'm' on your keyboard to freeze the rotations in place. Pressing 'm' again will restart the rotations.
+
+The front and back faces of the cubes are colored green and red (note that for a hypercube, a face is a 3-dimensional cube, just as for a 3-dimensional cube, a face is a 2-dimensional square). You can change the colors of these faces with the color wheel on the top-right. You can also press 'n' on your keyboard to toggle the color coding.
+
+Initially, the wireframe models are solid wireframes that can cast shadows. You can press b to obtain pure wireframes that do not cast shadows.
+
+You can control the position of the light by pressing the 'y', 'g', 'h', 'j', 'i', and 'o' keys for upward, leftward, downward, rightward, forward and backward motion of the light respectively. Pressing 'q' will change the color of the light to some random color. Pressing 'q' again will change it back to white.
+
+The camera position can be controlled with the standard 'w', 'a', 's', and 'd' keys. Note that while you can move the camera side-ways, and up-and-down, you can move it inward or outward, and that it will always face the origin.
+
+
+REFERENCES:
+
+Quaternion library: Copyright (c) 2017 Robert Eisele, https://github.com/infusion/Quaternion.js/
+
+Bloom effect code: https://stackoverflow.com/questions/8166384/how-to-get-a-glow-shader-effect-in-opengl-es-2-0/45043547#45043547
+
+Code for shapes, shadow mapper, etc obtained from previous assignments and from TA Jonathan Mitchell.
+
+
+
+
+
+
+
+
+
+
