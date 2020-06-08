@@ -551,7 +551,9 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                 'hypercube': new Hypercube_Wireframe(),
                 'sphere': new Subdivision_Sphere(4),
                 'box': new Box(),
-                'surface': new Displacement_Rect(763, 762, img)
+                'surface': new Displacement_Rect(763, 762, img),
+                // Load the model file:
+                'rocket': new Shape_From_File('assets/rocket.obj')
             };
             for (let i = 0, vertexCount = shapes['cube'].vertices.length; i < vertexCount; i++) {
                 shapes['cs' + i] = new Subdivision_Sphere(2); // 3c cube vertices
@@ -786,11 +788,6 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
 
             graphics_state.lights = this.lights;
 
-            //temo objectij
-//             model_transform = Mat4.identity().times(Mat4.translation([0, 2, 0]));
-//             box.draw(graphics_state, model_transform, this.plastic);
-//             box.draw(graphics_state, model_transform, this.shadow);
-
             //Creating our background using thin cubes acting as 5 planes (bottom, top, left, and right, and front)
             model_transform = Mat4.identity().times(Mat4.translation([0, 4, -11])).times(Mat4.scale([18, 12, 0.01])).times(Mat4.rotation(Math.PI, Vec.of(0 , 1, 0)));
             box.draw(graphics_state, model_transform, this.bg_back); //back surface
@@ -902,5 +899,11 @@ window.Hypercube_Scene = window.classes.Hypercube_Scene =
                     this.shapes['hcc' + i].draw(graphics_state, lookat_transform, this.shadow);
                 }
             }
+
+            ///////////////
+
+            // Draw rocket ship.
+            model_transform = Mat4.identity().times(Mat4.scale(Vec.of(1/3,1/3,1/3)));
+            this.shapes.rocket.draw(graphics_state, model_transform, this.plastic.override({color: this.colors.cc}));
         }
     };
