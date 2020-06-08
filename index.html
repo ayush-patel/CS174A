@@ -226,6 +226,32 @@
         colors.cb = Color.of(c.r/255, c.g/255, c.b/255, 1);
         colors.update = true;
     });
+
+    // Team and individual names
+    globalSettings.fontSize = 17;
+    globalSettings.color = '#008080';
+
+    let team_name = new TextLabel(undefined, globalSettings, {
+        x: 380, y: 540, w: 175, h: 14
+    });
+    team_name.text = 'Team AR - Hypercube Visualization';
+
+    globalSettings.fontSize = 14;
+    let ryan = new TextLabel(undefined, globalSettings, {
+        x: 150, y: 575, w: 175, h: 14
+    });
+    ryan.text = 'Ryan Adisasmito-Smith';
+
+    let ayush = new TextLabel(undefined, globalSettings, {
+        x: 500, y: 575, w: 175, h: 14
+    });
+    ayush.text = 'Ayush Patel';
+
+    let sriram = new TextLabel(undefined, globalSettings, {
+        x: 750, y: 575, w: 175, h: 14
+    });
+    sriram.text = 'Venkata Sai Sriram Sonti';
+
 </script>
 
 </body>
